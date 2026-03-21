@@ -1,0 +1,696 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Panel de Gestión · FACDEH · Universidad Central</title>
+<style>
+  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+  :root {
+    --bg-primary: #ffffff;
+    --bg-secondary: #f5f5f3;
+    --bg-tertiary: #eeeee9;
+    --text-primary: #1a1a18;
+    --text-secondary: #6b6b66;
+    --text-tertiary: #9b9b95;
+    --border-light: rgba(0,0,0,0.10);
+    --border-medium: rgba(0,0,0,0.18);
+    --border-strong: rgba(0,0,0,0.25);
+    --radius-md: 8px;
+    --radius-lg: 12px;
+    --accent: #0057a8;
+    --font: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Helvetica Neue', Arial, sans-serif;
+  }
+  @media (prefers-color-scheme: dark) {
+    :root {
+      --bg-primary: #1e1e1c;
+      --bg-secondary: #2a2a28;
+      --bg-tertiary: #333330;
+      --text-primary: #f0f0ec;
+      --text-secondary: #a8a8a2;
+      --text-tertiary: #707070;
+      --border-light: rgba(255,255,255,0.10);
+      --border-medium: rgba(255,255,255,0.18);
+      --border-strong: rgba(255,255,255,0.25);
+    }
+  }
+
+  body {
+    font-family: var(--font);
+    background: var(--bg-tertiary);
+    min-height: 100vh;
+    display: flex;
+    align-items: flex-start;
+    justify-content: center;
+    padding: 2rem 1rem;
+  }
+
+  .panel {
+    display: flex;
+    border: 0.5px solid var(--border-light);
+    border-radius: var(--radius-lg);
+    overflow: hidden;
+    width: 100%;
+    max-width: 960px;
+    min-height: 580px;
+    box-shadow: 0 2px 20px rgba(0,0,0,0.08);
+    background: var(--bg-primary);
+  }
+
+  /* SIDEBAR */
+  .sidebar {
+    width: 210px;
+    background: var(--bg-secondary);
+    border-right: 0.5px solid var(--border-light);
+    display: flex;
+    flex-direction: column;
+    flex-shrink: 0;
+    padding: 1rem 0;
+  }
+  .sidebar-header {
+    padding: 0 1rem 1rem;
+    border-bottom: 0.5px solid var(--border-light);
+    margin-bottom: 0.5rem;
+  }
+  .logo-row { display: flex; align-items: center; gap: 9px; }
+  .logo-box {
+    width: 30px; height: 30px; border-radius: 6px; background: var(--accent);
+    display: flex; align-items: center; justify-content: center; flex-shrink: 0;
+  }
+  .logo-title { font-size: 12.5px; font-weight: 600; color: var(--text-primary); line-height: 1.2; }
+  .logo-sub { font-size: 10.5px; color: var(--text-tertiary); line-height: 1.3; }
+
+  .nav-section-label {
+    font-size: 10px; font-weight: 600; color: var(--text-tertiary);
+    text-transform: uppercase; letter-spacing: 0.07em;
+    padding: 0.5rem 1rem 0.3rem;
+  }
+  .nav-inner { padding: 0 0.625rem; flex: 1; }
+  .navbtn {
+    display: flex; align-items: center; gap: 8px; padding: 7px 10px;
+    border-radius: 6px; cursor: pointer; font-size: 13px; border: none;
+    background: none; width: 100%; text-align: left; margin-bottom: 2px;
+    font-family: var(--font); color: var(--text-secondary); transition: all 0.12s;
+  }
+  .navbtn:hover { background: var(--bg-primary); color: var(--text-primary); }
+  .navbtn.active {
+    background: var(--bg-primary); color: var(--text-primary); font-weight: 600;
+    border: 0.5px solid var(--border-light);
+  }
+  .sidebar-footer {
+    padding: 0.75rem 1rem 0;
+    border-top: 0.5px solid var(--border-light);
+    margin-top: auto;
+  }
+  .sidebar-footer div { font-size: 11px; color: var(--text-tertiary); }
+
+  /* MAIN */
+  .main-area {
+    flex: 1; overflow-y: auto; background: var(--bg-primary);
+  }
+  .page { display: none; padding: 1.5rem; }
+  .page.active { display: block; }
+
+  .page-header { margin-bottom: 1.25rem; padding-bottom: 1rem; border-bottom: 0.5px solid var(--border-light); }
+  .page-title { font-size: 18px; font-weight: 600; color: var(--text-primary); margin-bottom: 3px; }
+  .page-sub { font-size: 13px; color: var(--text-secondary); }
+
+  /* METRIC CARDS */
+  .metrics-grid { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 10px; margin-bottom: 1.5rem; }
+  .metric-card { background: var(--bg-secondary); border-radius: var(--radius-md); padding: 1rem; }
+  .metric-label { font-size: 11.5px; color: var(--text-secondary); margin-bottom: 4px; }
+  .metric-value { font-size: 24px; font-weight: 600; color: var(--text-primary); }
+  .metric-desc { font-size: 11px; color: var(--text-tertiary); }
+
+  /* RECENT DOCS */
+  .two-col { display: grid; grid-template-columns: 1fr 1fr; gap: 1.25rem; }
+  .section-label { font-size: 13px; font-weight: 600; color: var(--text-primary); margin-bottom: 0.75rem; }
+  .recent-list { display: flex; flex-direction: column; gap: 6px; }
+  .recent-row {
+    display: flex; align-items: center; gap: 10px; padding: 0.75rem;
+    background: var(--bg-secondary); border-radius: var(--radius-md); cursor: pointer;
+    transition: background 0.12s;
+  }
+  .recent-row:hover { background: var(--bg-tertiary); }
+  .icon-badge {
+    width: 32px; height: 32px; border-radius: 6px;
+    display: flex; align-items: center; justify-content: center;
+    font-size: 9.5px; font-weight: 600; flex-shrink: 0;
+  }
+  .recent-title { font-size: 12.5px; font-weight: 600; color: var(--text-primary); overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+  .recent-meta { font-size: 11px; color: var(--text-tertiary); }
+
+  /* AREAS */
+  .area-row {
+    display: flex; align-items: center; justify-content: space-between;
+    padding: 8px 0; border-bottom: 0.5px solid var(--border-light);
+  }
+  .area-row:last-child { border-bottom: none; }
+  .area-dot { width: 6px; height: 6px; border-radius: 50%; flex-shrink: 0; }
+  .area-name { font-size: 12.5px; color: var(--text-primary); }
+  .area-count {
+    font-size: 11.5px; color: var(--text-secondary);
+    background: var(--bg-secondary); padding: 2px 8px; border-radius: 20px;
+  }
+
+  /* SEARCH + FILTER */
+  .search-box {
+    display: flex; align-items: center; gap: 8px;
+    background: var(--bg-secondary); border: 0.5px solid var(--border-light);
+    border-radius: var(--radius-md); padding: 7px 12px; margin-bottom: 0.75rem;
+  }
+  .search-box input {
+    border: none; background: none; outline: none; flex: 1;
+    font-size: 13px; color: var(--text-primary); font-family: var(--font);
+  }
+  .search-box input::placeholder { color: var(--text-tertiary); }
+  .filter-row { display: flex; gap: 6px; margin-bottom: 1rem; flex-wrap: wrap; }
+  .pill {
+    font-size: 11.5px; padding: 4px 12px; border-radius: 20px; cursor: pointer;
+    background: none; color: var(--text-secondary); border: 0.5px solid var(--border-medium);
+    font-family: var(--font); transition: all 0.1s;
+  }
+  .pill:hover { background: var(--bg-secondary); }
+  .pill.active { background: var(--accent); color: #fff; border-color: var(--accent); }
+
+  /* DOC LIST */
+  .doc-list { display: flex; flex-direction: column; gap: 6px; }
+  .doc-row {
+    display: flex; align-items: center; gap: 10px; padding: 0.75rem 1rem;
+    background: var(--bg-primary); border: 0.5px solid var(--border-light);
+    border-radius: var(--radius-md); cursor: pointer; transition: background 0.12s;
+  }
+  .doc-row:hover { background: var(--bg-secondary); }
+  .doc-info { flex: 1; min-width: 0; }
+  .doc-title { font-size: 13px; font-weight: 600; color: var(--text-primary); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+  .doc-meta { font-size: 11.5px; color: var(--text-tertiary); }
+  .badge-vigente { font-size: 11px; padding: 2px 8px; background: #EAF3DE; color: #27500A; border-radius: 20px; white-space: nowrap; flex-shrink: 0; }
+
+  /* POLICY CARDS */
+  .policy-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(230px, 1fr)); gap: 10px; }
+  .policy-card {
+    background: var(--bg-primary); border: 0.5px solid var(--border-light);
+    border-radius: var(--radius-lg); padding: 1.125rem; cursor: pointer;
+    transition: border-color 0.15s;
+  }
+  .policy-card:hover { border-color: var(--border-strong); }
+  .policy-header { display: flex; align-items: center; gap: 9px; margin-bottom: 8px; }
+  .policy-dot { width: 8px; height: 8px; border-radius: 50%; flex-shrink: 0; }
+  .policy-title { font-size: 13.5px; font-weight: 600; color: var(--text-primary); }
+  .policy-desc { font-size: 12px; color: var(--text-secondary); line-height: 1.5; }
+  .policy-res { font-size: 11px; color: var(--text-tertiary); margin-top: 8px; }
+
+  /* NORMATIVA */
+  .norm-area { margin-bottom: 1.25rem; }
+  .norm-area-header { display: flex; align-items: center; gap: 8px; margin-bottom: 0.6rem; }
+  .norm-stripe { width: 3px; height: 15px; border-radius: 2px; }
+  .norm-area-title { font-size: 13px; font-weight: 600; color: var(--text-primary); }
+  .norm-table {
+    border: 0.5px solid var(--border-light); border-radius: var(--radius-md); overflow: hidden;
+  }
+  .norm-thead {
+    display: grid; grid-template-columns: 1fr 130px 80px;
+    background: var(--bg-secondary); padding: 6px 12px;
+    font-size: 11px; font-weight: 600; color: var(--text-tertiary);
+    border-bottom: 0.5px solid var(--border-light);
+  }
+  .norm-row {
+    display: grid; grid-template-columns: 1fr 130px 80px;
+    padding: 8px 12px; font-size: 12.5px; cursor: pointer; transition: background 0.1s;
+    border-top: 0.5px solid var(--border-light);
+  }
+  .norm-row:first-of-type { border-top: none; }
+  .norm-row:hover { background: var(--bg-secondary); }
+  .norm-row-title { color: var(--text-primary); }
+  .norm-row-res { color: var(--text-tertiary); }
+
+  /* ASISTENTE */
+  .quick-btns { display: flex; flex-wrap: wrap; gap: 6px; margin-bottom: 1.25rem; }
+  .qbtn {
+    padding: 6px 13px; border: 0.5px solid var(--border-medium); border-radius: 20px;
+    cursor: pointer; background: none; color: var(--text-secondary); font-family: var(--font);
+    font-size: 11.5px; transition: all 0.1s; text-align: left;
+  }
+  .qbtn:hover { background: var(--bg-secondary); color: var(--text-primary); }
+  .chat-box {
+    background: var(--bg-secondary); border: 0.5px solid var(--border-light);
+    border-radius: var(--radius-lg); padding: 1.25rem; margin-bottom: 1.25rem;
+  }
+  .chat-header { display: flex; gap: 10px; align-items: flex-start; margin-bottom: 1rem; }
+  .avatar {
+    width: 34px; height: 34px; border-radius: 50%; background: #E6F1FB;
+    display: flex; align-items: center; justify-content: center; flex-shrink: 0;
+  }
+  .chat-title { font-size: 13.5px; font-weight: 600; color: var(--text-primary); margin-bottom: 4px; }
+  .chat-desc { font-size: 12.5px; color: var(--text-secondary); line-height: 1.5; }
+  .input-row { display: flex; gap: 8px; }
+  .query-input {
+    flex: 1; border: 0.5px solid var(--border-medium); border-radius: var(--radius-md);
+    padding: 8px 12px; font-size: 13px; font-family: var(--font);
+    background: var(--bg-primary); color: var(--text-primary); outline: none;
+  }
+  .query-input::placeholder { color: var(--text-tertiary); }
+  .query-input:focus { border-color: var(--accent); }
+  .send-btn {
+    padding: 8px 16px; background: var(--accent); color: white;
+    border: none; border-radius: var(--radius-md); font-size: 13px;
+    cursor: pointer; font-family: var(--font); font-weight: 600; white-space: nowrap;
+    transition: opacity 0.1s;
+  }
+  .send-btn:hover { opacity: 0.88; }
+
+  .freq-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 8px; }
+  .freq-card {
+    padding: 0.75rem; background: var(--bg-primary); border: 0.5px solid var(--border-light);
+    border-radius: var(--radius-md); cursor: pointer; text-align: left;
+    font-family: var(--font); transition: border-color 0.1s;
+  }
+  .freq-card:hover { border-color: var(--border-strong); }
+  .freq-title { font-size: 12.5px; font-weight: 600; color: var(--text-primary); margin-bottom: 2px; }
+  .freq-meta { font-size: 11px; color: var(--text-tertiary); }
+
+  /* YEAR BADGE */
+  .year-badge {
+    font-size: 11.5px; color: var(--text-tertiary);
+    background: var(--bg-secondary); padding: 4px 10px;
+    border-radius: 20px; border: 0.5px solid var(--border-light);
+  }
+
+  /* AI RESPONSE AREA */
+  .ai-response {
+    background: var(--bg-primary); border: 0.5px solid var(--border-light);
+    border-radius: var(--radius-md); padding: 1rem; margin-top: 1rem;
+    font-size: 13px; color: var(--text-primary); line-height: 1.6;
+    display: none;
+  }
+  .ai-response.loading { color: var(--text-secondary); font-style: italic; }
+  .ai-thinking { display: flex; align-items: center; gap: 8px; color: var(--text-tertiary); font-size: 12px; }
+  .dot-anim span {
+    display: inline-block; width: 5px; height: 5px; border-radius: 50%;
+    background: var(--text-tertiary); animation: pulse 1.2s ease-in-out infinite;
+  }
+  .dot-anim span:nth-child(2) { animation-delay: 0.2s; }
+  .dot-anim span:nth-child(3) { animation-delay: 0.4s; }
+  @keyframes pulse { 0%,80%,100%{opacity:.2} 40%{opacity:1} }
+
+  @media (max-width: 680px) {
+    .sidebar { width: 48px; }
+    .sidebar .logo-title, .sidebar .logo-sub, .navbtn span, .nav-section-label, .sidebar-footer { display: none; }
+    .navbtn { justify-content: center; padding: 10px; }
+    .metrics-grid { grid-template-columns: 1fr 1fr; }
+    .two-col { grid-template-columns: 1fr; }
+  }
+</style>
+</head>
+<body>
+
+<div class="panel">
+  <!-- SIDEBAR -->
+  <div class="sidebar">
+    <div class="sidebar-header">
+      <div class="logo-row">
+        <div class="logo-box">
+          <svg width="16" height="16" viewBox="0 0 16 16" fill="none">
+            <rect x="2" y="2" width="12" height="8" rx="1.5" fill="white" opacity="0.9"/>
+            <rect x="5.5" y="11" width="5" height="2" rx="1" fill="white" opacity="0.6"/>
+            <line x1="2" y1="5" x2="14" y2="5" stroke="#0057a8" stroke-width="0.8" opacity="0.5"/>
+            <line x1="2" y1="7.5" x2="10" y2="7.5" stroke="#0057a8" stroke-width="0.8" opacity="0.5"/>
+          </svg>
+        </div>
+        <div>
+          <div class="logo-title">FACDEH</div>
+          <div class="logo-sub">UCen · Gestión Documental</div>
+        </div>
+      </div>
+    </div>
+    <div class="nav-inner">
+      <div class="nav-section-label">Principal</div>
+      <button class="navbtn active" id="nb-inicio" onclick="navigate('inicio')">
+        <svg width="14" height="14" viewBox="0 0 14 14" fill="none" style="flex-shrink:0"><rect x="1" y="1" width="5.5" height="5.5" rx="1.5" fill="currentColor" opacity="0.9"/><rect x="7.5" y="1" width="5.5" height="5.5" rx="1.5" fill="currentColor" opacity="0.4"/><rect x="1" y="7.5" width="5.5" height="5.5" rx="1.5" fill="currentColor" opacity="0.4"/><rect x="7.5" y="7.5" width="5.5" height="5.5" rx="1.5" fill="currentColor" opacity="0.7"/></svg>
+        <span>Inicio</span>
+      </button>
+      <button class="navbtn" id="nb-resoluciones" onclick="navigate('resoluciones')">
+        <svg width="14" height="14" viewBox="0 0 14 14" fill="none" style="flex-shrink:0"><rect x="2.5" y="1" width="9" height="12" rx="1.5" fill="none" stroke="currentColor" stroke-width="1.2"/><line x1="5" y1="4.5" x2="9" y2="4.5" stroke="currentColor" stroke-width="1"/><line x1="5" y1="7" x2="9" y2="7" stroke="currentColor" stroke-width="1"/><line x1="5" y1="9.5" x2="7.5" y2="9.5" stroke="currentColor" stroke-width="1"/></svg>
+        <span>Resoluciones</span>
+      </button>
+      <button class="navbtn" id="nb-politicas" onclick="navigate('politicas')">
+        <svg width="14" height="14" viewBox="0 0 14 14" fill="none" style="flex-shrink:0"><path d="M7 1L8.6 4.8H12.5L9.5 7.2L10.5 11L7 8.8L3.5 11L4.5 7.2L1.5 4.8H5.4L7 1Z" fill="none" stroke="currentColor" stroke-width="1.1" stroke-linejoin="round"/></svg>
+        <span>Políticas</span>
+      </button>
+      <button class="navbtn" id="nb-normativa" onclick="navigate('normativa')">
+        <svg width="14" height="14" viewBox="0 0 14 14" fill="none" style="flex-shrink:0"><circle cx="7" cy="7" r="5.5" fill="none" stroke="currentColor" stroke-width="1.2"/><line x1="7" y1="4" x2="7" y2="7.5" stroke="currentColor" stroke-width="1.2" stroke-linecap="round"/><circle cx="7" cy="9.5" r="0.8" fill="currentColor"/></svg>
+        <span>Normativa</span>
+      </button>
+
+      <div class="nav-section-label" style="margin-top:4px;">Herramientas</div>
+      <button class="navbtn" id="nb-asistente" onclick="navigate('asistente')">
+        <svg width="14" height="14" viewBox="0 0 14 14" fill="none" style="flex-shrink:0"><rect x="1.5" y="2" width="11" height="7.5" rx="2" fill="none" stroke="currentColor" stroke-width="1.2"/><line x1="4" y1="5.5" x2="6.5" y2="5.5" stroke="currentColor" stroke-width="1"/><line x1="4" y1="7" x2="10" y2="7" stroke="currentColor" stroke-width="1"/><path d="M4.5 12L6 9.5H8L9.5 12" stroke="currentColor" stroke-width="1" stroke-linecap="round" stroke-linejoin="round"/></svg>
+        <span>Asistente IA</span>
+      </button>
+    </div>
+    <div class="sidebar-footer">
+      <div>Universidad Central de Chile</div>
+      <div>2025 · FACDEH</div>
+    </div>
+  </div>
+
+  <!-- MAIN AREA -->
+  <div class="main-area">
+
+    <!-- INICIO -->
+    <div id="page-inicio" class="page active">
+      <div class="page-header" style="display:flex;align-items:center;justify-content:space-between;">
+        <div>
+          <div class="page-title">Panel de Gestión · FACDEH</div>
+          <div class="page-sub">Facultad de Ciencias de la Educación y Humanidades</div>
+        </div>
+        <div class="year-badge">2025</div>
+      </div>
+      <div class="metrics-grid">
+        <div class="metric-card">
+          <div class="metric-label">Resoluciones</div>
+          <div class="metric-value">22</div>
+          <div class="metric-desc">documentos activos</div>
+        </div>
+        <div class="metric-card">
+          <div class="metric-label">Políticas</div>
+          <div class="metric-value">8</div>
+          <div class="metric-desc">institucionales</div>
+        </div>
+        <div class="metric-card">
+          <div class="metric-label">Áreas cubiertas</div>
+          <div class="metric-value">6</div>
+          <div class="metric-desc">de gestión</div>
+        </div>
+        <div class="metric-card">
+          <div class="metric-label">Vigencia</div>
+          <div class="metric-value">95%</div>
+          <div class="metric-desc">documentos al día</div>
+        </div>
+      </div>
+      <div class="two-col">
+        <div>
+          <div class="section-label">Documentos recientes</div>
+          <div class="recent-list">
+            <div class="recent-row" onclick="navigate('resoluciones')">
+              <div class="icon-badge" style="background:#E6F1FB;color:#0C447C;">ADM</div>
+              <div style="min-width:0;"><div class="recent-title">Política de Admisión</div><div class="recent-meta">Res. 8090 · 2025</div></div>
+            </div>
+            <div class="recent-row" onclick="navigate('resoluciones')">
+              <div class="icon-badge" style="background:#FAEEDA;color:#633806;">AUD</div>
+              <div style="min-width:0;"><div class="recent-title">Plan de Auditoría 2025</div><div class="recent-meta">Res. 1101 · 2025</div></div>
+            </div>
+            <div class="recent-row" onclick="navigate('resoluciones')">
+              <div class="icon-badge" style="background:#EAF3DE;color:#27500A;">MPE</div>
+              <div style="min-width:0;"><div class="recent-title">Modelo Progresión Estudiantil</div><div class="recent-meta">Res. 4946</div></div>
+            </div>
+            <div class="recent-row" onclick="navigate('resoluciones')">
+              <div class="icon-badge" style="background:#EEEDFE;color:#3C3489;">INC</div>
+              <div style="min-width:0;"><div class="recent-title">Inclusión y Diversidad</div><div class="recent-meta">Res. 3264 · 2021</div></div>
+            </div>
+          </div>
+        </div>
+        <div>
+          <div class="section-label">Áreas de gestión</div>
+          <div class="area-row"><div style="display:flex;align-items:center;gap:8px;"><div class="area-dot" style="background:#0057a8;"></div><span class="area-name">Académico</span></div><span class="area-count">8 docs</span></div>
+          <div class="area-row"><div style="display:flex;align-items:center;gap:8px;"><div class="area-dot" style="background:#639922;"></div><span class="area-name">Inclusión y Diversidad</span></div><span class="area-count">2 docs</span></div>
+          <div class="area-row"><div style="display:flex;align-items:center;gap:8px;"><div class="area-dot" style="background:#BA7517;"></div><span class="area-name">Compliance y Auditoría</span></div><span class="area-count">3 docs</span></div>
+          <div class="area-row"><div style="display:flex;align-items:center;gap:8px;"><div class="area-dot" style="background:#993C1D;"></div><span class="area-name">Seguridad TI</span></div><span class="area-count">2 docs</span></div>
+          <div class="area-row"><div style="display:flex;align-items:center;gap:8px;"><div class="area-dot" style="background:#534AB7;"></div><span class="area-name">Docencia y Formación</span></div><span class="area-count">4 docs</span></div>
+          <div class="area-row" style="border-bottom:none;"><div style="display:flex;align-items:center;gap:8px;"><div class="area-dot" style="background:#0F6E56;"></div><span class="area-name">Convivencia</span></div><span class="area-count">1 doc</span></div>
+        </div>
+      </div>
+    </div>
+
+    <!-- RESOLUCIONES -->
+    <div id="page-resoluciones" class="page">
+      <div class="page-header">
+        <div class="page-title">Resoluciones</div>
+        <div class="page-sub">22 documentos institucionales · Universidad Central de Chile</div>
+      </div>
+      <div class="search-box">
+        <svg width="13" height="13" viewBox="0 0 13 13" fill="none" style="flex-shrink:0;opacity:0.4"><circle cx="5" cy="5" r="3.8" fill="none" stroke="currentColor" stroke-width="1.3"/><line x1="7.8" y1="7.8" x2="11.5" y2="11.5" stroke="currentColor" stroke-width="1.3" stroke-linecap="round"/></svg>
+        <input id="search-docs" oninput="filterDocs()" placeholder="Buscar por nombre o número...">
+      </div>
+      <div class="filter-row">
+        <button class="pill active" onclick="setFilter('todos',this)">Todos</button>
+        <button class="pill" onclick="setFilter('academico',this)">Académico</button>
+        <button class="pill" onclick="setFilter('inclusion',this)">Inclusión</button>
+        <button class="pill" onclick="setFilter('compliance',this)">Compliance</button>
+        <button class="pill" onclick="setFilter('docencia',this)">Docencia</button>
+        <button class="pill" onclick="setFilter('seguridad',this)">Seguridad</button>
+      </div>
+      <div class="doc-list" id="doc-list"></div>
+    </div>
+
+    <!-- POLÍTICAS -->
+    <div id="page-politicas" class="page">
+      <div class="page-header">
+        <div class="page-title">Políticas Institucionales</div>
+        <div class="page-sub">Haz clic en cada tarjeta para consultar al Asistente IA</div>
+      </div>
+      <div class="policy-grid">
+        <div class="policy-card" onclick="askAI('Explica los puntos clave de la Política de Admisión de la Universidad Central de Chile (Res. 8090, 2025)')">
+          <div class="policy-header"><div class="policy-dot" style="background:#0057a8;"></div><span class="policy-title">Política de Admisión</span></div>
+          <p class="policy-desc">Lineamientos transparentes para el ingreso en todos los segmentos y modalidades, garantizando igualdad de condiciones.</p>
+          <div class="policy-res">Res. 8090 · 2025</div>
+        </div>
+        <div class="policy-card" onclick="askAI('¿Cuáles son los principios y objetivos de la Política de Inclusión y Diversidad de la UCEN, aprobada en la Res. 3264 de mayo 2021?')">
+          <div class="policy-header"><div class="policy-dot" style="background:#639922;"></div><span class="policy-title">Inclusión y Diversidad</span></div>
+          <p class="policy-desc">Reconocimiento de diferencias socioeconómicas, culturales, étnicas, de género y discapacidad en la comunidad universitaria.</p>
+          <div class="policy-res">Res. 3264 · Mayo 2021</div>
+        </div>
+        <div class="policy-card" onclick="askAI('¿Qué establece la Política de Seguridad de la Información de la UCEN (Res. 8082) sobre responsabilidades y protección de activos?')">
+          <div class="policy-header"><div class="policy-dot" style="background:#993C1D;"></div><span class="policy-title">Seguridad de la Información</span></div>
+          <p class="policy-desc">Marco institucional para la protección de activos de información, gestión de riesgos y continuidad operativa.</p>
+          <div class="policy-res">Res. 8082</div>
+        </div>
+        <div class="policy-card" onclick="askAI('Explica el Compliance Institucional de la Universidad Central de Chile (Res. 0921): objetivos, alcance y responsabilidades')">
+          <div class="policy-header"><div class="policy-dot" style="background:#BA7517;"></div><span class="policy-title">Compliance Institucional</span></div>
+          <p class="policy-desc">Programa de cumplimiento normativo, ético y legal que rige el comportamiento organizacional de la universidad.</p>
+          <div class="policy-res">Res. 0921</div>
+        </div>
+        <div class="policy-card" onclick="askAI('Explica el Plan de Formación Docente de la UCEN (Res. 4949): objetivos, estrategias y competencias que desarrolla')">
+          <div class="policy-header"><div class="policy-dot" style="background:#534AB7;"></div><span class="policy-title">Plan de Formación Docente</span></div>
+          <p class="policy-desc">Estrategia de desarrollo pedagógico para el cuerpo académico en metodologías, evaluación y prácticas de enseñanza.</p>
+          <div class="policy-res">Res. 4949</div>
+        </div>
+        <div class="policy-card" onclick="askAI('Explica las 4 dimensiones del Modelo de Progresión Estudiantil de la UCEN (Res. 4946)')">
+          <div class="policy-header"><div class="policy-dot" style="background:#0F6E56;"></div><span class="policy-title">Modelo Progresión Estudiantil</span></div>
+          <p class="policy-desc">Sistema de seguimiento a la trayectoria académica en 4 dimensiones: resultados, curricular, enseñanza y acompañamiento.</p>
+          <div class="policy-res">Res. 4946</div>
+        </div>
+        <div class="policy-card" onclick="askAI('¿Qué establece el Reglamento de Convivencia UCEN (Res. 1156, 2020) sobre faltas y sanciones para estudiantes?')">
+          <div class="policy-header"><div class="policy-dot" style="background:#D4537E;"></div><span class="policy-title">Reglamento de Convivencia</span></div>
+          <p class="policy-desc">Normas que regulan la convivencia, tipos de faltas, sanciones y procedimientos de la comunidad universitaria.</p>
+          <div class="policy-res">Res. 1156 · 2020</div>
+        </div>
+        <div class="policy-card" onclick="askAI('¿Cuáles son los ejes estratégicos de las Políticas Globales de Desarrollo de la UCEN (Res. 3165)?')">
+          <div class="policy-header"><div class="policy-dot" style="background:#888780;"></div><span class="policy-title">Políticas Globales de Desarrollo</span></div>
+          <p class="policy-desc">Marco estratégico corporativo con directrices de desarrollo institucional y ejes misionales 2021–2025.</p>
+          <div class="policy-res">Res. 3165</div>
+        </div>
+      </div>
+    </div>
+
+    <!-- NORMATIVA -->
+    <div id="page-normativa" class="page">
+      <div class="page-header">
+        <div class="page-title">Normativa por Área</div>
+        <div class="page-sub">Marco regulatorio institucional · Haz clic en una fila para consultar</div>
+      </div>
+
+      <div class="norm-area">
+        <div class="norm-area-header"><div class="norm-stripe" style="background:#0057a8;"></div><span class="norm-area-title">Área Académica</span></div>
+        <div class="norm-table">
+          <div class="norm-thead"><span>Documento</span><span>Resolución</span><span>Estado</span></div>
+          <div class="norm-row" onclick="askAI('Explica el proceso de virtualización de programas académicos de la UCEN según el Protocolo 2025')"><span class="norm-row-title">Virtualización de Programas Académicos</span><span class="norm-row-res">Protocolo 2025</span><span class="badge-vigente">Vigente</span></div>
+          <div class="norm-row" onclick="askAI('¿Qué establece la Res. 0092 de la UCEN sobre créditos de cursos PEI?')"><span class="norm-row-title">Créditos Cursos PEI</span><span class="norm-row-res">Res. 0092</span><span class="badge-vigente">Vigente</span></div>
+          <div class="norm-row" onclick="askAI('Explica el Modelo de Progresión Estudiantil de la UCEN y sus 4 dimensiones (Res. 4946)')"><span class="norm-row-title">Modelo de Progresión Estudiantil</span><span class="norm-row-res">Res. 4946</span><span class="badge-vigente">Vigente</span></div>
+          <div class="norm-row" onclick="askAI('¿Qué establece la Política de Admisión de la UCEN (Res. 8090, 2025)?')"><span class="norm-row-title">Política de Admisión</span><span class="norm-row-res">Res. 8090 · 2025</span><span class="badge-vigente">Vigente</span></div>
+          <div class="norm-row" onclick="askAI('Explica las Políticas Globales de Desarrollo de la UCEN (Res. 3165)')"><span class="norm-row-title">Políticas Globales de Desarrollo</span><span class="norm-row-res">Res. 3165</span><span class="badge-vigente">Vigente</span></div>
+        </div>
+      </div>
+
+      <div class="norm-area">
+        <div class="norm-area-header"><div class="norm-stripe" style="background:#534AB7;"></div><span class="norm-area-title">Docencia y Formación</span></div>
+        <div class="norm-table">
+          <div class="norm-thead"><span>Documento</span><span>Resolución</span><span>Estado</span></div>
+          <div class="norm-row" onclick="askAI('Explica el Plan de Formación Docente de la UCEN (Res. 4949): objetivos y estrategias principales')"><span class="norm-row-title">Plan de Formación Docente</span><span class="norm-row-res">Res. 4949</span><span class="badge-vigente">Vigente</span></div>
+          <div class="norm-row" onclick="askAI('¿Qué contempla el Plan de Formación, Innovación e Investigación en Docencia de la VRA (Res. 5796)?')"><span class="norm-row-title">Plan Formación, Innovación e Investigación en Docencia</span><span class="norm-row-res">Res. 5796</span><span class="badge-vigente">Vigente</span></div>
+        </div>
+      </div>
+
+      <div class="norm-area">
+        <div class="norm-area-header"><div class="norm-stripe" style="background:#BA7517;"></div><span class="norm-area-title">Compliance y Auditoría</span></div>
+        <div class="norm-table">
+          <div class="norm-thead"><span>Documento</span><span>Resolución</span><span>Estado</span></div>
+          <div class="norm-row" onclick="askAI('Explica el Compliance Institucional de la UCEN (Res. 0921): objetivos, alcance y responsabilidades')"><span class="norm-row-title">Compliance Institucional</span><span class="norm-row-res">Res. 0921</span><span class="badge-vigente">Vigente</span></div>
+          <div class="norm-row" onclick="askAI('¿Qué objetivos y alcance establece el Plan de Auditoría 2025 de la UCEN (Res. 1101)?')"><span class="norm-row-title">Plan de Auditoría 2025</span><span class="norm-row-res">Res. 1101 · 2025</span><span class="badge-vigente">Vigente</span></div>
+        </div>
+      </div>
+
+      <div class="norm-area">
+        <div class="norm-area-header"><div class="norm-stripe" style="background:#639922;"></div><span class="norm-area-title">Inclusión y Convivencia</span></div>
+        <div class="norm-table">
+          <div class="norm-thead"><span>Documento</span><span>Resolución</span><span>Estado</span></div>
+          <div class="norm-row" onclick="askAI('Explica la Política y Reglamento de Inclusión y Diversidad de la UCEN (Res. 3264, 2021)')"><span class="norm-row-title">Política de Inclusión y Diversidad</span><span class="norm-row-res">Res. 3264 · 2021</span><span class="badge-vigente">Vigente</span></div>
+          <div class="norm-row" onclick="askAI('¿Qué sanciones establece el Reglamento de Convivencia UCEN (Res. 1156, 2020) para faltas graves y gravísimas?')"><span class="norm-row-title">Reglamento de Convivencia</span><span class="norm-row-res">Res. 1156 · 2020</span><span class="badge-vigente">Vigente</span></div>
+        </div>
+      </div>
+    </div>
+
+    <!-- ASISTENTE IA -->
+    <div id="page-asistente" class="page">
+      <div class="page-header">
+        <div class="page-title">Asistente Documental IA</div>
+        <div class="page-sub">Consulta políticas y resoluciones UCEN usando inteligencia artificial</div>
+      </div>
+      <div class="quick-btns">
+        <button class="qbtn" onclick="askAI('¿Cuáles son los principios de la Política de Inclusión y Diversidad de la UCEN (Res. 3264)?')">Política de Inclusión →</button>
+        <button class="qbtn" onclick="askAI('¿Qué sanciones establece el Reglamento de Convivencia UCEN (Res. 1156) para faltas graves?')">Convivencia y sanciones →</button>
+        <button class="qbtn" onclick="askAI('¿Cómo funciona el proceso de virtualización de programas académicos en la UCEN?')">Virtualización →</button>
+        <button class="qbtn" onclick="askAI('¿Cuáles son las 4 dimensiones del Modelo de Progresión Estudiantil (Res. 4946)?')">Progresión estudiantil →</button>
+        <button class="qbtn" onclick="askAI('¿Qué regula el Compliance Institucional de la UCEN (Res. 0921)?')">Compliance →</button>
+        <button class="qbtn" onclick="askAI('¿Cuáles son los objetivos del Plan de Formación Docente UCEN (Res. 4949)?')">Formación docente →</button>
+      </div>
+      <div class="chat-box">
+        <div class="chat-header">
+          <div class="avatar">
+            <svg width="15" height="15" viewBox="0 0 15 15" fill="none"><circle cx="7.5" cy="7.5" r="6" fill="none" stroke="#0C447C" stroke-width="1.2"/><line x1="7.5" y1="5" x2="7.5" y2="8" stroke="#0C447C" stroke-width="1.2" stroke-linecap="round"/><circle cx="7.5" cy="10" r="0.75" fill="#0C447C"/></svg>
+          </div>
+          <div>
+            <div class="chat-title">Asistente UCEN · FACDEH</div>
+            <p class="chat-desc">Escribe cualquier pregunta sobre la normativa de la Universidad Central o selecciona una consulta rápida. Las respuestas están basadas en los documentos institucionales del proyecto.</p>
+          </div>
+        </div>
+        <div class="input-row">
+          <input class="query-input" id="custom-query" placeholder="Ej: ¿Qué dice la política de admisión sobre estudiantes con discapacidad?">
+          <button class="send-btn" onclick="customQuery()">Consultar →</button>
+        </div>
+        <div class="ai-response" id="ai-response"></div>
+      </div>
+      <div>
+        <div class="section-label" style="margin-bottom:0.75rem;">Consultas frecuentes</div>
+        <div class="freq-grid">
+          <button class="freq-card" onclick="askAI('Resume los puntos más importantes de la Política de Admisión UCen 2025 (Res. 8090)')"><div class="freq-title">Política de Admisión</div><div class="freq-meta">Res. 8090 · Puntos clave →</div></button>
+          <button class="freq-card" onclick="askAI('¿Qué valores y ejes estratégicos definen las Políticas Globales de Desarrollo UCEN (Res. 3165)?')"><div class="freq-title">Políticas Globales de Desarrollo</div><div class="freq-meta">Res. 3165 · Ejes estratégicos →</div></button>
+          <button class="freq-card" onclick="askAI('¿Cuál es el alcance y los objetivos del Plan de Auditoría 2025 de la UCen (Res. 1101)?')"><div class="freq-title">Plan de Auditoría 2025</div><div class="freq-meta">Res. 1101 · Objetivos →</div></button>
+          <button class="freq-card" onclick="askAI('¿Cuáles son las responsabilidades definidas en la Política de Seguridad de la Información UCen (Res. 8082)?')"><div class="freq-title">Seguridad de la Información</div><div class="freq-meta">Res. 8082 · Responsabilidades →</div></button>
+        </div>
+      </div>
+    </div>
+
+  </div><!-- /main-area -->
+</div><!-- /panel -->
+
+<script>
+const docs = [
+  {title:'Política de Admisión',res:'8090',year:'2025',cat:'academico',bg:'#E6F1FB',fg:'#0C447C',icon:'ADM'},
+  {title:'Plan de Auditoría 2025',res:'1101',year:'2025',cat:'compliance',bg:'#FAEEDA',fg:'#633806',icon:'AUD'},
+  {title:'Modelo de Progresión Estudiantil',res:'4946',year:'',cat:'academico',bg:'#EAF3DE',fg:'#27500A',icon:'MPE'},
+  {title:'Política de Inclusión y Diversidad',res:'3264',year:'2021',cat:'inclusion',bg:'#EEEDFE',fg:'#3C3489',icon:'INC'},
+  {title:'Compliance Institucional',res:'0921',year:'',cat:'compliance',bg:'#FAEEDA',fg:'#633806',icon:'COM'},
+  {title:'Plan de Formación Docente',res:'4949',year:'',cat:'docencia',bg:'#EEEDFE',fg:'#3C3489',icon:'DOC'},
+  {title:'Plan Formación, Innovación e Investigación en Docencia',res:'5796',year:'',cat:'docencia',bg:'#EEEDFE',fg:'#3C3489',icon:'I+I'},
+  {title:'Política de Seguridad de la Información',res:'8082',year:'',cat:'seguridad',bg:'#FCEBEB',fg:'#791F1F',icon:'SEG'},
+  {title:'Políticas Globales de Desarrollo',res:'3165',year:'',cat:'academico',bg:'#E6F1FB',fg:'#0C447C',icon:'PGD'},
+  {title:'Reglamento de Convivencia',res:'1156',year:'2020',cat:'academico',bg:'#E1F5EE',fg:'#085041',icon:'CON'},
+  {title:'Virtualización de Programas Académicos',res:'Protocolo',year:'2025',cat:'academico',bg:'#E1F5EE',fg:'#085041',icon:'VIR'},
+  {title:'Créditos Cursos PEI',res:'0092',year:'',cat:'academico',bg:'#E6F1FB',fg:'#0C447C',icon:'PEI'},
+  {title:'Reglamento de Inclusión UCEN',res:'3264',year:'2021',cat:'inclusion',bg:'#EAF3DE',fg:'#27500A',icon:'INC'},
+  {title:'Resolución N° 0040',res:'0040',year:'',cat:'academico',bg:'#F1EFE8',fg:'#444441',icon:'RES'},
+  {title:'Resolución N° 0041',res:'0041',year:'',cat:'academico',bg:'#F1EFE8',fg:'#444441',icon:'RES'},
+  {title:'Resolución N° 4029',res:'4029',year:'',cat:'academico',bg:'#E6F1FB',fg:'#0C447C',icon:'RES'},
+  {title:'Resolución N° 4488',res:'4488',year:'',cat:'academico',bg:'#E6F1FB',fg:'#0C447C',icon:'RES'},
+  {title:'Resolución N° 6214',res:'6214',year:'',cat:'academico',bg:'#E6F1FB',fg:'#0C447C',icon:'RES'},
+  {title:'Resolución N° 6215',res:'6215',year:'',cat:'academico',bg:'#E6F1FB',fg:'#0C447C',icon:'RES'},
+  {title:'Resolución N° 7470',res:'7470',year:'',cat:'academico',bg:'#E6F1FB',fg:'#0C447C',icon:'RES'},
+  {title:'Resolución N° 8576 Chile',res:'8576',year:'',cat:'academico',bg:'#E6F1FB',fg:'#0C447C',icon:'RES'},
+  {title:'Res. N° 092 Chile',res:'092',year:'',cat:'academico',bg:'#E6F1FB',fg:'#0C447C',icon:'RES'},
+];
+
+let activeFilter = 'todos';
+
+function renderDocs(list) {
+  const el = document.getElementById('doc-list');
+  if (!el) return;
+  if (!list.length) { el.innerHTML = '<div style="padding:1.5rem;text-align:center;color:var(--text-tertiary);font-size:13px;">No se encontraron documentos</div>'; return; }
+  el.innerHTML = list.map(d => `
+    <div class="doc-row" onclick="askAI('Explica el documento: ${d.title} (Res. ${d.res}) de la Universidad Central de Chile')">
+      <div class="icon-badge" style="background:${d.bg};color:${d.fg};">${d.icon}</div>
+      <div class="doc-info">
+        <div class="doc-title">${d.title}</div>
+        <div class="doc-meta">Res. ${d.res}${d.year ? ' · ' + d.year : ''}</div>
+      </div>
+      <span class="badge-vigente">Vigente</span>
+    </div>`).join('');
+}
+
+function filterDocs() {
+  const q = (document.getElementById('search-docs').value || '').toLowerCase();
+  let f = docs;
+  if (activeFilter !== 'todos') f = f.filter(d => d.cat === activeFilter);
+  if (q.trim()) f = f.filter(d => d.title.toLowerCase().includes(q) || d.res.includes(q));
+  renderDocs(f);
+}
+
+function setFilter(cat, btn) {
+  activeFilter = cat;
+  document.querySelectorAll('.pill').forEach(p => p.classList.remove('active'));
+  btn.classList.add('active');
+  filterDocs();
+}
+
+function navigate(page) {
+  document.querySelectorAll('.page').forEach(p => p.classList.remove('active'));
+  const pg = document.getElementById('page-' + page);
+  if (pg) pg.classList.add('active');
+  document.querySelectorAll('.navbtn').forEach(b => b.classList.remove('active'));
+  const nb = document.getElementById('nb-' + page);
+  if (nb) nb.classList.add('active');
+  if (page === 'resoluciones') filterDocs();
+  document.querySelector('.main-area').scrollTop = 0;
+}
+
+function customQuery() {
+  const inp = document.getElementById('custom-query');
+  const q = (inp.value || '').trim();
+  if (q) { askAI(q + ' (contexto: normativa y resoluciones UCEN · FACDEH)'); inp.value = ''; }
+}
+
+document.addEventListener('keydown', function(e) {
+  if (e.key === 'Enter' && document.activeElement.id === 'custom-query') customQuery();
+});
+
+async function askAI(question) {
+  navigate('asistente');
+  const box = document.getElementById('ai-response');
+  box.style.display = 'block';
+  box.innerHTML = '<div class="ai-thinking">Consultando documentos UCEN <div class="dot-anim"><span></span><span></span><span></span></div></div>';
+
+  try {
+    const resp = await fetch('https://api.anthropic.com/v1/messages', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        model: 'claude-sonnet-4-20250514',
+        max_tokens: 1000,
+        system: 'Eres el Asistente Documental de la FACDEH (Facultad de Ciencias de la Educación y Humanidades) de la Universidad Central de Chile. Respondes preguntas sobre la normativa, políticas y resoluciones institucionales de la UCEN de manera clara y concisa. Si no tienes información específica sobre algún documento, orienta al usuario a consultar directamente la Secretaría General o el portal institucional. Responde siempre en español.',
+        messages: [{ role: 'user', content: question }]
+      })
+    });
+    const data = await resp.json();
+    const text = data.content && data.content[0] ? data.content[0].text : 'No se pudo obtener respuesta.';
+    box.innerHTML = '<div style="font-size:11px;font-weight:600;color:var(--text-tertiary);margin-bottom:8px;text-transform:uppercase;letter-spacing:0.05em;">Respuesta del Asistente</div>' +
+      '<div style="font-size:13px;color:var(--text-primary);line-height:1.65;">' + text.replace(/\n/g, '<br>') + '</div>';
+  } catch(e) {
+    box.innerHTML = '<div style="font-size:13px;color:var(--text-secondary);">El asistente IA no está disponible en esta versión local. Para consultas interactivas, usa el panel en Claude.ai.</div>';
+  }
+}
+
+renderDocs(docs);
+</script>
+</body>
+</html>
