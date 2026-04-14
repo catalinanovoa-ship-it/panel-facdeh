@@ -592,14 +592,14 @@
           </div>
           <div>
             <div class="chat-title">Asistente UCEN · FACDEH</div>
-            <p class="chat-desc">Escribe cualquier pregunta sobre la normativa de la Universidad Central o selecciona una consulta rápida. Las respuestas están basadas en los documentos institucionales del proyecto.</p>
+            <p class="chat-desc">Selecciona una consulta rápida o escribe tu pregunta. Cada clic abre Claude.ai con el contexto FACDEH precargado para obtener una respuesta inmediata.</p>
           </div>
         </div>
         <div class="input-row">
-          <input class="query-input" id="custom-query" placeholder="Ej: ¿Qué dice la política de admisión sobre estudiantes con discapacidad?">
-          <button class="send-btn" onclick="customQuery()">Consultar →</button>
+          <input class="query-input" id="custom-query" placeholder="Ej: ¿Qué dice la política de admisión sobre estudiantes con discapacidad?" title="Abre Claude.ai con tu pregunta">
+          <button class="send-btn" onclick="customQuery()">Consultar en Claude.ai ↗</button>
         </div>
-        <div class="ai-response" id="ai-response"></div>
+        
       </div>
       <div>
         <div class="section-label" style="margin-bottom:0.75rem;">Consultas frecuentes</div>
@@ -699,37 +699,17 @@ function navigate(page) {
 function customQuery() {
   const inp = document.getElementById('custom-query');
   const q = (inp.value || '').trim();
-  if (q) { askAI(q + ' (contexto: normativa y resoluciones UCEN · FACDEH)'); inp.value = ''; }
+  if (q) { askAI(q + ' (normativa y resoluciones UCEN FACDEH 2026)'); inp.value = ''; }
 }
 
 document.addEventListener('keydown', function(e) {
   if (e.key === 'Enter' && document.activeElement.id === 'custom-query') customQuery();
 });
 
-async function askAI(question) {
-  navigate('asistente');
-  const box = document.getElementById('ai-response');
-  box.style.display = 'block';
-  box.innerHTML = '<div class="ai-thinking">Consultando documentos UCEN <div class="dot-anim"><span></span><span></span><span></span></div></div>';
-
-  try {
-    const resp = await fetch('https://api.anthropic.com/v1/messages', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({
-        model: 'claude-sonnet-4-20250514',
-        max_tokens: 1000,
-        system: 'Eres el Asistente Documental de la FACDEH (Facultad de Ciencias de la Educación y Humanidades) de la Universidad Central de Chile. Respondes preguntas sobre la normativa, políticas y resoluciones institucionales de la UCEN de manera clara y concisa. Si no tienes información específica sobre algún documento, orienta al usuario a consultar directamente la Secretaría General o el portal institucional. Responde siempre en español.',
-        messages: [{ role: 'user', content: question }]
-      })
-    });
-    const data = await resp.json();
-    const text = data.content && data.content[0] ? data.content[0].text : 'No se pudo obtener respuesta.';
-    box.innerHTML = '<div style="font-size:11px;font-weight:600;color:var(--text-tertiary);margin-bottom:8px;text-transform:uppercase;letter-spacing:0.05em;">Respuesta del Asistente</div>' +
-      '<div style="font-size:13px;color:var(--text-primary);line-height:1.65;">' + text.replace(/\n/g, '<br>') + '</div>';
-  } catch(e) {
-    box.innerHTML = '<div style="font-size:13px;color:var(--text-secondary);">El asistente IA no está disponible en esta versión local. Para consultas interactivas, usa el panel en Claude.ai.</div>';
-  }
+function askAI(question) {
+  const context = 'Contexto: Soy parte de la FACDEH (Facultad de Derecho y Humanidades) de la Universidad Central de Chile. Tengo acceso a las resoluciones y normativas institucionales 2026. ';
+  const url = 'https://claude.ai/new?q=' + encodeURIComponent(context + question);
+  window.open(url, '_blank');
 }
 
 renderDocs(docs);
